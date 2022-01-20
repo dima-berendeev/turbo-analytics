@@ -1,5 +1,14 @@
 package org.berendeev.turboanalytics
 
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class AnalyticsEvent(val eventName: String, val service: AnalyticsService)
+
+enum class AnalyticsService {
+    GOOGLE,
+    YANDEX
+}
+
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class EventProperty(val key: String)
@@ -8,16 +17,10 @@ annotation class EventProperty(val key: String)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class IgnoreProperty
 
-abstract class AnalyticsEvent(@IgnoreProperty val eventName: String)
-
 interface AnalyticsReporter {
-    fun send(event: AnalyticsEvent)
+    fun send(event: Any)
 }
 
-interface AnalyticsSystems {
-    fun getForEvent(eventName: String): List<AnalyticsSystem>
-}
-
-interface AnalyticsSystem {
-    fun send(eventName: String, map: Map<String, Any?>)
+interface AnalyticsServiceAdapter {
+    fun send(event: Any)
 }

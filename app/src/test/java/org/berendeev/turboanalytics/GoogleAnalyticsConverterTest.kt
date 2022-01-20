@@ -1,11 +1,22 @@
 package org.berendeev.turboanalytics
 
+import android.os.Bundle
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-class AnalyticsEventConverterTest {
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [29])
+class GoogleAnalyticsConverterTest {
+
+    private val converter = GoogleAnalyticsConverter()
+
     @Test
     fun map_object() {
+
+        @AnalyticsEvent("test_event_name", AnalyticsService.GOOGLE)
         class User(
             @EventProperty("name")
             val name: String,
@@ -14,18 +25,18 @@ class AnalyticsEventConverterTest {
             val soname: String,
         )
 
+        @AnalyticsEvent("test_event_name", AnalyticsService.GOOGLE)
         class TestEvent(
             @EventProperty(key = KEY)
             var user: User
-        ) : AnalyticsEvent("test_event_name")
+        )
 
         val user = User("111", "222")
         val event = TestEvent(user)
-        val map = AnalyticsEventConverter()
-            .convertToMap(event)
+        val bundle = converter.convertObject(event)
 
-        assertTrue(KEY in map.keys)
-        val userMap = map[KEY] as Map<String, String>
+        assertTrue(KEY in bundle.keySet())
+        val userMap = bundle[KEY] as Bundle
         assertNotNull(userMap)
         assertEquals(user.name, userMap["name"])
         assertEquals(user.soname, userMap["soname"])
@@ -33,13 +44,14 @@ class AnalyticsEventConverterTest {
 
     @Test
     fun when_several_properties() {
+        @AnalyticsEvent("test_event_name", AnalyticsService.GOOGLE)
         class TestEvent(
             @EventProperty(key = "key1")
             val valInConstructor: String,
 
             @EventProperty(key = "key2")
             var varInConstructor: String
-        ) : AnalyticsEvent("test_event_name") {
+        ) {
             @EventProperty(key = "key3")
             var valInBody: String = "val3"
 
@@ -48,37 +60,36 @@ class AnalyticsEventConverterTest {
         }
 
         val event = TestEvent("val1", "val2")
-        val map = AnalyticsEventConverter()
-            .convertToMap(event)
-        assertEquals(4, map.keys.size)
+        val result = converter.convertObject(event)
+        assertEquals(4, result.keySet().size)
     }
 
     @Test
     fun map_string() {
+        @AnalyticsEvent("test_event_name", AnalyticsService.GOOGLE)
         class TestEvent(
             @EventProperty(key = KEY)
             val userName: String,
-        ) : AnalyticsEvent("test_event_name")
+        )
 
         val event = TestEvent("value")
-        val map = AnalyticsEventConverter()
-            .convertToMap(event)
+        val result = converter.convertObject(event)
 
-        assertEquals(event.userName, map[KEY])
+        assertEquals(event.userName, result[KEY])
     }
 
     @Test
     fun map_int() {
+        @AnalyticsEvent("test_event_name", AnalyticsService.GOOGLE)
         class TestEvent(
             @EventProperty(key = KEY)
             val userName: String,
-        ) : AnalyticsEvent("test_event_name")
+        )
 
         val event = TestEvent("value")
-        val map = AnalyticsEventConverter()
-            .convertToMap(event)
+        val result = converter.convertObject(event)
 
-        assertEquals(event.userName, map[KEY])
+        assertEquals(event.userName, result[KEY])
     }
 
     companion object {

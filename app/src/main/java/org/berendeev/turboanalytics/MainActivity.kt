@@ -1,50 +1,49 @@
 package org.berendeev.turboanalytics
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import org.berendeev.turboanalytics.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val analyticSystem = object : AnalyticsSystem {
-        override fun send(eventName: String, map: Map<String, Any?>) {
-            Log.d("AnalyticsEvent:", "name: $eventName, content$map")
-        }
-    }
-    private val analyticsSystems = object : AnalyticsSystems {
-        override fun getForEvent(eventName: String): List<AnalyticsSystem> {
-            return listOf(analyticSystem)
-        }
-    }
+    private val googleAnalyticsServiceAdapter = GoogleAnalyticsServiceAdapter(
+        GoogleAnalyticsConverter()
+    )
+    private val yandexAnalyticsServiceAdapter = YandexAnalyticsServiceAdapter(
+        YandexAnalyticsConverter()
+    )
     private val analyticsReporter = AnalyticsReporterImpl(
-        analyticsSystems,
-        AnalyticsEventConverter()
+        googleAnalyticsServiceAdapter,
+        yandexAnalyticsServiceAdapter
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        analyticsReporter.send(ActivityOpenedEvent(System.currentTimeMillis()))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
 
-        binding.fab.setOnClickListener { view ->
-            analyticsReporter.send(FloatButtonClickedEvent(System.currentTimeMillis()))
+        binding.yandexEventButton.setOnClickListener {
+            analyticsReporter.send(YandexButtonClickedEvent(System.currentTimeMillis()))
+        }
+
+        binding.googleEventButton.setOnClickListener {
+            analyticsReporter.send(GoogleButtonClickedEvent(System.currentTimeMillis()))
         }
     }
 }
 
-class FloatButtonClickedEvent(
+@AnalyticsEvent("GoogleButton.Click", AnalyticsService.GOOGLE)
+class GoogleButtonClickedEvent(
     @EventProperty("time")
     val time: Long
-) : AnalyticsEvent("FloatButton.Clicked")
+)
 
-class ActivityOpenedEvent(
+@AnalyticsEvent("YandexButton.Click", AnalyticsService.YANDEX)
+class YandexButtonClickedEvent(
     @EventProperty("time")
     val time: Long
-) : AnalyticsEvent("Activity.Created")
+)
